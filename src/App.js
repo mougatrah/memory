@@ -1,18 +1,32 @@
 import React, { Component } from 'react';
-import bcrypt from "bcrypt-nodejs";
 import './App.css';
-// import { nextTick } from 'q';
+import AES from "crypto-js/aes";
 
+const secret = "Secret";
 const backgrounds = [
   "red",
+  "green",
+  "blue",
+  "purple",
+  "pink",
+  "yellow",
+  "teal",
+  "orange",
   "red",
   "green",
-  "green"
+  "blue",
+  "purple",
+  "pink",
+  "yellow",
+  "orange",
+  "teal"
+ 
 
 ];
 
 
-function shuffle(array) {
+function shuffle(OLDarray) {
+  var array = [...OLDarray];
   var currentIndex = array.length, temporaryValue, randomIndex;
 
   // While there remain elements to shuffle...
@@ -38,8 +52,7 @@ class Card extends Component {
 
 
   render() {
-    console.log(this.props.picked + " " + this.props.matched)
-    return <div id={this.props.bg} className="btn col-4 border border-light" style={this.props.picked || this.props.matched ? { background: this.props.background } : { background: "grey" }}>TEST</div>
+    return <div id={this.props.bg} className="btn border border-light" style={this.props.picked || this.props.matched ? { background: this.props.background } : { background: "grey" }}></div>
 
 
   }
@@ -57,7 +70,7 @@ class App extends Component {
       maxMatches: backgrounds.length / 2,
       matches: 0,
       backgrounds: shuffle(backgrounds).map((bg, index) => {
-        return bcrypt.hashSync(bg)
+        return {hash: AES.encrypt(bg, secret), bg: bg};
       })
     }
 
@@ -68,61 +81,49 @@ class App extends Component {
 
 
   determineMatch() {
-    if (
-      !backgrounds.some(bg => {
-
-        var p1 = bcrypt.compareSync(bg, this.state.pick1);
-        var p2 = bcrypt.compareSync(bg, this.state.pick2);
-
-        if (p1 && p2) {
-          console.log("MATCH")
-
-          return true;
+    var p1 = AES.decrypt(this.state.pick1, secret).toString();
+    var p2 = AES.decrypt(this.state.pick2, secret).toString();
+   
+   if (p1 === p2) {
+   
+    try {
+      this.setState({
+        pick1: null,
+        pick2: null,
+        matched: [...this.state.matched, this.state.pick1, this.state.pick2],
+        matches: this.state.matches + 1
+      }, () => {
+        console.log(this.state.matches >= this.state.maxMatches)
+        if (this.state.matches >= this.state.maxMatches) {
+          this.reset();
         }
-        return false;
-      })
-    ) {
-      try {
-        this.setState({
-          pick1: null,
-          pick2: null,
-
-        })
-      } catch (err) {
-        console.log("set ERR")
-      }
-    } else {
-      try {
-        this.setState({
-          pick1: null,
-          pick2: null,
-          matched: [...this.state.matched, this.state.pick1, this.state.pick2],
-          matches: this.state.matches + 1
-        }, () => {
-          console.log(this.state.matches >= this.state.maxMatches)
-          if (this.state.matches >= this.state.maxMatches) {
-            this.reset();
-          }
-        })
-      } catch (err) {
-        console.log("MATCH ERR")
-      }
+      });
+    } catch (err) {
+      console.log("MATCH ERR")
     }
+  } else {
+  
+    try {
+      this.setState({
+        pick1: null,
+        pick2: null,
+      })
+    } catch (err) {
+      console.log("set ERR")
+    }
+  }
 
   }
 
   handleClick(e) {
     e.preventDefault();
 
-    console.log(e.target.id)
-
-
-    if (!this.state.matched.includes(e.target.id) && this.state.backgrounds.includes(e.target.id))
+    if (!this.state.matched.includes(e.target.id))
       if (this.state.pick1 === null) {
         this.setState({ pick1: e.target.id });
-      } else if (this.state.pick2 === null) {
-        this.setState({ pick2: e.target.id }, () => setTimeout(this.determineMatch, 1500));
-
+      } else if (this.state.pick2 === null && this.state.pick1 !== e.target.id) {
+        this.setState({ pick2: e.target.id }, () => { setTimeout(this.determineMatch, 1000)});
+        
       }
   }
 
@@ -130,11 +131,13 @@ class App extends Component {
     this.setState({
       pick1: null,
       pick2: null,
-      matched: ["test"],
+      matched: [],
       maxMatches: backgrounds.length / 2,
       matches: 0,
       backgrounds: shuffle(backgrounds).map((bg, index) => {
-        return bcrypt.hashSync(bg)
+        var test = {hash: AES.encrypt(bg, secret), bg: bg};
+        console.log(test.hash + "   " + test.hash.toString( ))
+        return test;
       })
     })
   }
@@ -143,27 +146,27 @@ class App extends Component {
 
 
   render() {
-
+    console.log(this.state.matches)
     return (
       <div className="App container">
 
         <header className="App-header row bg-light border border-dark">
-          <h1 className="m-auto"> HEADER </h1>
+          <h1 className="m-auto"> MEMORY </h1>
         </header>
 
-        <div className="row">
+        
           <div className="col-12" onClick={this.handleClick}>
             {
+              
               this.state.backgrounds.map(((bg, index) => {
-                return <Card key={index} bg={bg} picked={this.state.pick1 === bg || this.state.pick2 === bg} matched={this.state.matched.includes(bg)}
-                  background={backgrounds.find((el) => {
-                    return bcrypt.compareSync(el, bg);
-                  })} />
+                
+                return <Card key={index} bg={bg.hash.toString()} picked={this.state.pick1 === bg.hash.toString() || this.state.pick2 === bg.hash.toString()} matched={this.state.matched.includes(bg.hash.toString())}
+                  background={bg.bg} />
               }))
             }
 
           </div>
-        </div>
+   
 
 
 
