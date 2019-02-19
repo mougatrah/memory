@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="./src/App.css" />
+    <title>Phelan's Memory Game</title>
+</head>
+
+<body>
+    <div id="react-demo"></div>
+    <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+
+</body>
+<script type="text/babel">
+    const secret = "Secret";
+    const backgrounds = [
+        "red",
+        "green",
+        "blue",
+        "purple",
+        "pink",
+        "yellow",
+        "teal",
+        "orange",
+        "red",
+        "green",
+        "blue",
+        "purple",
+        "pink",
+        "yellow",
+        "orange",
+        "teal"
+
+
+    ];
+
+    function shuffle(OLDarray) {
+        var array = [...OLDarray];
+        var currentIndex = array.length, temporaryValue, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (0 !== currentIndex) {
+
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+
+            // And swap it with the current element.
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
+
+    class Card extends React.Component {
+
+
+
+        render() {
+            return <div id={this.props.bg} className="btn border border-light" style={this.props.picked || this.props.matched ? { background: this.props.background } : { background: "grey" }}></div>
+            
+        }
+
+
+    }
+
+    class MemoryGame extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = {
+                pick1: null,
+                pick2: null,
+                matched: ["test"],
+                maxMatches: backgrounds.length / 2,
+                matches: 0,
+                backgrounds: shuffle(backgrounds).map((bg, index) => {
+                    return {
+                        hash:
+                            CryptoJS.AES.encrypt(bg, secret), bg: bg
+                    };
+                })
+            }
+
+            this.handleClick = this.handleClick.bind(this);
+            this.determineMatch = this.determineMatch.bind(this);
+            this.reset = this.reset.bind(this);
+        }
+
+
+        determineMatch() {
+            if (this.state.pick1 && this.state.pick2) {
+                var p1 =
+                    CryptoJS.AES.decrypt(this.state.pick1, secret).toString();
+                var p2 =
+                    CryptoJS.AES.decrypt(this.state.pick2, secret).toString();
+
+                if (p1 === p2) {
+
+                    try {
+                        this.setState({
+                            pick1: null,
+                            pick2: null,
+                            matched: [...this.state.matched, this.state.pick1, this.state.pick2],
+                            matches: this.state.matches + 1
+                        }, () => {
+                            if (this.state.matches >= this.state.maxMatches) {
+                                this.reset();
+                            }
+                        });
+                    } catch (err) {
+                        console.log("MATCH ERR")
+                    }
+                } else {
+
+                    try {
+                        this.setState({
+                            pick1: null,
+                            pick2: null,
+                        })
+                    } catch (err) {
+                        console.log("set ERR")
+                    }
+                }
+
+            }
+
+        }
+
+        handleClick(e) {
+            e.preventDefault();
+            if (!this.state.matched.includes(e.target.id))
+                if (this.state.pick1 === null) {
+                    this.setState({ pick1: e.target.id });
+                } else if (this.state.pick2 === null && this.state.pick1 !== e.target.id) {
+                    this.setState({ pick2: e.target.id }, () => { setTimeout(this.determineMatch, 1000) });
+
+                }
+        }
+
+        reset() {
+
+            this.setState({
+                pick1: null,
+                pick2: null,
+                matched: [],
+                maxMatches: backgrounds.length / 2,
+                matches: 0,
+                backgrounds: shuffle(backgrounds).map((bg, index) => {
+                    var test = {
+                        hash:
+                            CryptoJS.AES.encrypt(bg, secret), bg: bg
+                    };
+                    return test;
+                })
+            })
+        }
+
+
+
+
+        render() {
+            return (
+                <div id="memory-game" className="App">
+
+                    <header className="App-header row bg-light border border-dark">
+                        <h1 className="text-dark m-auto"> MEMORY </h1>
+
+                        <button id="resetBtn" className="btn btn-danger" onClick={this.reset}>RESET</button>
+
+                    </header>
+
+
+                    <div className="col-12" onClick={this.handleClick}>
+                        {
+
+                            this.state.backgrounds.map(((bg, index) => {
+
+                                return <Card key={index} bg={bg.hash.toString()} picked={this.state.pick1 === bg.hash.toString() || this.state.pick2 === bg.hash.toString()} matched={this.state.matched.includes(bg.hash.toString())}
+                                    background={bg.bg} />
+                            }))
+                        }
+
+                    </div>
+
+
+
+
+
+
+                </div>
+            );
+        }
+    }
+
+    ReactDOM.render(<MemoryGame />, document.getElementById("react-demo"))
+</script>
+
+</html>
