@@ -32,8 +32,10 @@
   }
 } */
 
-.btn{
+.col-12 .btn{
   margin: 0 auto;
   width: 25%;
-  min-height: 10vh;
+  height: 10vh;
+  cursor: pointer;
+ 
 }

@@ -76,49 +76,51 @@ class App extends Component {
 
     this.handleClick = this.handleClick.bind(this);
     this.determineMatch = this.determineMatch.bind(this);
-
-  }
+    this.reset = this.reset.bind(this);
+  } 
 
 
   determineMatch() {
-    var p1 = AES.decrypt(this.state.pick1, secret).toString();
-    var p2 = AES.decrypt(this.state.pick2, secret).toString();
-   
-   if (p1 === p2) {
-   
-    try {
-      this.setState({
-        pick1: null,
-        pick2: null,
-        matched: [...this.state.matched, this.state.pick1, this.state.pick2],
-        matches: this.state.matches + 1
-      }, () => {
-        console.log(this.state.matches >= this.state.maxMatches)
-        if (this.state.matches >= this.state.maxMatches) {
-          this.reset();
-        }
-      });
-    } catch (err) {
-      console.log("MATCH ERR")
+    if(this.state.pick1 && this.state.pick2){
+      var p1 = AES.decrypt(this.state.pick1, secret).toString();
+      var p2 = AES.decrypt(this.state.pick2, secret).toString();
+     
+     if (p1 === p2) {
+     
+      try {
+        this.setState({
+          pick1: null,
+          pick2: null,
+          matched: [...this.state.matched, this.state.pick1, this.state.pick2],
+          matches: this.state.matches + 1
+        }, () => {
+          if (this.state.matches >= this.state.maxMatches) {
+            this.reset();
+          }
+        });
+      } catch (err) {
+        console.log("MATCH ERR")
+      }
+    } else {
+    
+      try {
+        this.setState({
+          pick1: null,
+          pick2: null,
+        })
+      } catch (err) {
+        console.log("set ERR")
+      }
     }
-  } else {
   
-    try {
-      this.setState({
-        pick1: null,
-        pick2: null,
-      })
-    } catch (err) {
-      console.log("set ERR")
     }
-  }
-
+   
   }
 
   handleClick(e) {
     e.preventDefault();
 
-    if (!this.state.matched.includes(e.target.id))
+    if (!this.state.matched.includes(e.target.id) && e.target.id !== "resetBtn")
       if (this.state.pick1 === null) {
         this.setState({ pick1: e.target.id });
       } else if (this.state.pick2 === null && this.state.pick1 !== e.target.id) {
@@ -128,6 +130,7 @@ class App extends Component {
   }
 
   reset() {
+
     this.setState({
       pick1: null,
       pick2: null,
@@ -136,7 +139,6 @@ class App extends Component {
       matches: 0,
       backgrounds: shuffle(backgrounds).map((bg, index) => {
         var test = {hash: AES.encrypt(bg, secret), bg: bg};
-        console.log(test.hash + "   " + test.hash.toString( ))
         return test;
       })
     })
@@ -146,12 +148,14 @@ class App extends Component {
 
 
   render() {
-    console.log(this.state.matches)
     return (
       <div className="App container">
 
         <header className="App-header row bg-light border border-dark">
           <h1 className="m-auto"> MEMORY </h1>
+          
+          <button id="resetBtn" className="btn btn-danger" onClick={this.reset}>RESET</button>
+          
         </header>
 
         
