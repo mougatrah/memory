@@ -32,10 +32,22 @@
   }
 } */
 
+
 .col-12 .btn{
   margin: 0 auto;
   width: 25%;
-  height: 10vh;
+  height: 10vw;
   cursor: pointer;
  
+}
+
+#memory-game {
+  text-align: center;
+  margin: 0 auto;
+  padding: 1.5rem;
+  width:100%;
+  background-color:silver;
+  border: solid black 5px;
+  
+
 }
