@@ -86,6 +86,8 @@
                 maxMatches: backgrounds.length / 2,
                 matches: 0,
                 wins: 0,
+                attempts: 0,
+                smallestAttempt: 0,
                 backgrounds: shuffle(backgrounds).map((bg, index) => {
                     return {
                         hash:
@@ -114,10 +116,11 @@
                             pick1: null,
                             pick2: null,
                             matched: [...this.state.matched, this.state.pick1, this.state.pick2],
-                            matches: this.state.matches + 1
+                            matches: this.state.matches + 1,
+                            attempts: this.state.attempts + 1
                         }, () => {
                             if (this.state.matches >= this.state.maxMatches) {
-                                this.reset();
+                                this.reset(1);
                             }
                         });
                     } catch (err) {
@@ -129,6 +132,8 @@
                         this.setState({
                             pick1: null,
                             pick2: null,
+                            attempts: this.state.attempts + 1,
+
                         })
                     } catch (err) {
                         console.log("set ERR")
@@ -141,7 +146,7 @@
 
         handleClick(e) {
             e.preventDefault();
-            if (!this.state.matched.includes(e.target.id))
+            if (!this.state.matched.includes(e.target.id) && e.target.id.length > 32)
                 if (this.state.pick1 === null) {
                     this.setState({ pick1: e.target.id });
                 } else if (this.state.pick2 === null && this.state.pick1 !== e.target.id) {
@@ -150,15 +155,35 @@
                 }
         }
 
-        reset() {
+        reset(newWin) {
+            var smAtt;
+            if(newWin != 1){
+                newWin = 0; 
+                smAtt = this.state.smallestAttempt;
 
+            }else{
+                
+                if(this.state.smallestAttempt === 0){
+                    smAtt = this.state.attempts;
+                }else{
+                    if(this.state.attempts < this.state.smallestAttempt){
+                        smAtt = this.state.attempts;
+                    }else {
+                        smAtt = this.state.smallestAttempt;
+                    }
+                }
+            }
+           
+           
             this.setState({
                 pick1: null,
-                pick2: null,
+                pick2: null,    
                 matched: [],
                 maxMatches: backgrounds.length / 2,
                 matches: 0,
-                wins: this.state.wins + 1,
+                attempts: 0,
+                smallestAttempt: smAtt,
+                wins: this.state.wins + newWin,
                 backgrounds: shuffle(backgrounds).map((bg, index) => {
                     var test = {
                         hash:
@@ -178,8 +203,10 @@
 
                     <header className="App-header row bg-light border border-dark">
                         <h1 className="text-dark m-auto"> MEMORY </h1>
-                        <div className="col-4">
+                        <div className="row">
                             <div className="col-12">Score: {this.state.matches}</div>
+                            <div className="col-12">Attempts: {this.state.attempts}</div>
+                            <div className="col-12">Record attempts: {this.state.smallestAttempt}</div>
                             <div className='col-12'>Wins: {this.state.wins}</div>
                         </div>
                         <button id="resetBtn" className="btn btn-danger" onClick={this.reset}>RESET</button>
