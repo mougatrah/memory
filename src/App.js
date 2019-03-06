@@ -69,6 +69,7 @@ class App extends Component {
       matched: ["test"],
       maxMatches: backgrounds.length / 2,
       matches: 0,
+      wins: 0,
       backgrounds: shuffle(backgrounds).map((bg, index) => {
         return {hash: AES.encrypt(bg, secret), bg: bg};
       })
@@ -137,6 +138,7 @@ class App extends Component {
       matched: [],
       maxMatches: backgrounds.length / 2,
       matches: 0,
+      wins: this.state.wins + 1,
       backgrounds: shuffle(backgrounds).map((bg, index) => {
         var test = {hash: AES.encrypt(bg, secret), bg: bg};
         return test;
@@ -153,7 +155,10 @@ class App extends Component {
 
         <header className="App-header row bg-light border border-dark">
           <h1 className="m-auto"> MEMORY </h1>
-          
+          <div className="col-4">
+            <div className="col-12">Score: {this.state.matches}</div>
+            <div className='col-12'>Wins: {this.state.wins}</div>
+          </div>
           <button id="resetBtn" className="btn btn-danger" onClick={this.reset}>RESET</button>
           
         </header>
